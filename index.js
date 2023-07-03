@@ -37,9 +37,34 @@ async function run() {
       res.send(result);
     });
     app.get("/employes", async (req, res) => {
-      const result = await employeeCollection.find().toArray();
-      res.send(result);
+      const page = parseInt(req.query.page) || 1;
+      const pageSize = 10;
+
+      try {
+        const totalCount = await employeeCollection.countDocuments();
+        const totalPages = Math.ceil(totalCount / pageSize);
+
+        const result = await employeeCollection
+          .find()
+          .skip((page - 1) * pageSize)
+          .limit(pageSize)
+          .toArray();
+
+        res.json({
+          data: result,
+          page: page,
+          pageSize: pageSize,
+          totalPages: totalPages,
+          totalCount: totalCount,
+        });
+      } catch (error) {
+        console.error("Error fetching employees:", error);
+        res
+          .status(500)
+          .json({ error: "An error occurred while fetching employees" });
+      }
     });
+
     app.get("/employes/find", async (req, res) => {
       let { name, mobileNo } = req.query;
       let query = {};
