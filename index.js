@@ -2,7 +2,6 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const express = require("express");
 require("dotenv").config();
 const cors = require("cors");
-
 const app = express();
 const PORT = process.env.PORT || 7000;
 
@@ -29,6 +28,9 @@ async function run() {
     const employeeCollection = client
       .db("employee-collection")
       .collection("employes");
+    const imagesCollection = client
+      .db("employee-collection")
+      .collection("images");
 
     app.post("/create/employee", async (req, res) => {
       const newUser = req.body;
@@ -40,50 +42,28 @@ async function run() {
       const result = await employeeCollection.find().toArray();
       res.send(result);
     });
-    // app.get("/employes", async (req, res) => {
-    //   const page = parseInt(req.query.page) || 1;
-    //   const pageSize = 10;
+    app.post("/upload/images", async (req, res) => {
+      const newImg = req.body;
+      const result = await imagesCollection.insertOne(newImg);
+      console.log(newImg);
+      res.send(result);
+    });
+    app.get("/images", async (req, res) => {
+      const result = await imagesCollection.find().toArray();
+      res.send(result);
+    });
 
-    //   try {
-    //     const totalCount = await employeeCollection.countDocuments();
-    //     const totalPages = Math.ceil(totalCount / pageSize);
-
-    //     const result = await employeeCollection
-    //       .find()
-    //       .skip((page - 1) * pageSize)
-    //       .limit(pageSize)
-    //       .toArray();
-
-    //     res.json({
-    //       data: result,
-    //       page: page,
-    //       pageSize: pageSize,
-    //       totalPages: totalPages,
-    //       totalCount: totalCount,
-    //     });
-    //   } catch (error) {
-    //     console.error("Error fetching employees:", error);
-    //     res
-    //       .status(500)
-    //       .json({ error: "An error occurred while fetching employees" });
-    //   }
-    // });
     app.get("/employes/find", async (req, res) => {
       let { name, mobileNo } = req.query;
       let query = {};
-      // Remove any non-digit characters from the mobileNo
-      // Remove spaces from the mobileNo
-      // mobileNo = mobileNo.toString();
 
       if (name) {
-        // Use a regular expression to perform a case-insensitive search
         query.$or = [
           { firstName: { $regex: name, $options: "i" } },
           { lastName: { $regex: name, $options: "i" } },
         ];
       }
 
-      // Check if 'mobileNo' parameter exists
       if (mobileNo) {
         query.mobileNo = mobileNo;
       }
